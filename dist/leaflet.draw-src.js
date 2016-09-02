@@ -278,22 +278,16 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 				});
 			}
 
-			if (!L.Browser.touch) {
-				this._map.on('mouseup', this._onMouseUp, this); // Necessary for 0.7 compatibility
-			}
-
 			this._mouseMarker
-				.on('mousedown', this._onMouseDown, this)
+				.on('click', this._onClick, this)
 				.on('mouseout', this._onMouseOut, this)
-				.on('mouseup', this._onMouseUp, this) // Necessary for 0.8 compatibility
 				.on('mousemove', this._onMouseMove, this) // Necessary to prevent 0.8 stutter
 				.addTo(this._map);
 
 			this._map
-				.on('mouseup', this._onMouseUp, this) // Necessary for 0.7 compatibility
+				.on('click', this._onClick, this) // Necessary for 0.7 compatibility
 				.on('mousemove', this._onMouseMove, this)
 				.on('zoomlevelschange', this._onZoomEnd, this)
-				.on('click', this._onTouch, this)
 				.on('zoomend', this._onZoomEnd, this);
 		}
 	},
@@ -314,9 +308,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		delete this._poly;
 
 		this._mouseMarker
-			.off('mousedown', this._onMouseDown, this)
+			.off('click', this._onClick, this)
 			.off('mouseout', this._onMouseOut, this)
-			.off('mouseup', this._onMouseUp, this)
 			.off('mousemove', this._onMouseMove, this);
 		this._map.removeLayer(this._mouseMarker);
 		delete this._mouseMarker;
@@ -325,11 +318,10 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		this._clearGuides();
 
 		this._map
-			.off('mouseup', this._onMouseUp, this)
+			.off('click', this._onClick, this)
 			.off('mousemove', this._onMouseMove, this)
 			.off('zoomlevelschange', this._onZoomEnd, this)
-			.off('zoomend', this._onZoomEnd, this)
-			.off('click', this._onTouch, this);
+			.off('zoomend', this._onZoomEnd, this);
 	},
 
 	deleteLastVertex: function () {
@@ -442,30 +434,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		this._updateTooltip();
 	},
 
-	_onMouseDown: function (e) {
-		var originalEvent = e.originalEvent;
-		this._mouseDownOrigin = L.point(originalEvent.clientX, originalEvent.clientY);
-	},
-
-	_onMouseUp: function (e) {
-		if (this._mouseDownOrigin) {
-			// We detect clicks within a certain tolerance, otherwise let it
-			// be interpreted as a drag by the map
-			var distance = L.point(e.originalEvent.clientX, e.originalEvent.clientY)
-				.distanceTo(this._mouseDownOrigin);
-			if (Math.abs(distance) < 9 * (window.devicePixelRatio || 1)) {
-				this.addVertex(e.latlng);
-			}
-		}
-		this._mouseDownOrigin = null;
-	},
-
-	_onTouch: function (e) {
-		// #TODO: use touchstart and touchend vs using click(touch start & end).
-		if (L.Browser.touch) { // #TODO: get rid of this once leaflet fixes their click/touch.
-			this._onMouseDown(e);
-			this._onMouseUp(e);
-		}
+	_onClick: function (e) {
+		this.addVertex(e.latlng);
 	},
 
 	_onMouseOut: function () {
